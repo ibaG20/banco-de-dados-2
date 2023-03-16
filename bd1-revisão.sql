@@ -244,3 +244,13 @@ SELECT * FROM ListaAtacantesBrasileiros;
 
 SELECT nome, cpf FROM ListaAtacantesBrasileiros
 	WHERE salario > 200000;
+	
+	
+CREATE OR REPLACE VIEW Jogadores AS
+	SELECT nome, posicao, id_equipe, pais_origem, salario
+		FROM jogador_estrangeiro
+	UNION
+	SELECT nome, posicao, id_equipe, 'Brasil', salario
+		FROM jogador_brasileiro;
+		
+SELECT * FROM Jogadores;
