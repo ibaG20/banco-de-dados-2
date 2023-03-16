@@ -233,3 +233,14 @@ INSERT INTO jogo (id, data_jogo, id_equipe_casa, id_equipe_fora,
 INSERT INTO jogo (id, data_jogo, id_equipe_casa, id_equipe_fora, 
                 gols_equipe_casa, gols_equipe_fora, id_cidade, estadio, id_campeonato)
   VALUES (NEXTVAL('seq_jogo'), TO_DATE('29/07/1994', 'dd/mm/yyyy'), 6, 12, 2, 1, null, null, 1);
+  
+  
+
+CREATE OR REPLACE VIEW ListaAtacantesBrasileiros AS
+	SELECT * FROM jogador_brasileiro
+		WHERE posicao like 'Atacante';
+		
+SELECT * FROM ListaAtacantesBrasileiros;
+
+SELECT nome, cpf FROM ListaAtacantesBrasileiros
+	WHERE salario > 200000;
