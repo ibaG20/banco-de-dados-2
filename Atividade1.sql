@@ -248,28 +248,23 @@ SELECT equipe.nome AS nome_equipe, jogador_estrangeiro.nome AS nome_jogador
 FROM equipe 
 LEFT JOIN jogador_estrangeiro ON (equipe.id = jogador_estrangeiro.id_equipe);
 
-SELECT * FROM view_materializada_equipe
-
-CREATE OR REPLACE VIEW view_tecnicos_anos2000_2010 AS
-SELECT *
-FROM tecnico
-WHERE tecnico.data_nasc BETWEEN '2000-01-01' AND '2010-12-31';
+SELECT * FROM view_materializada_equipe;
 
 /*Realiza uma pesquisa para calcular quantos jogadores existem em cada equipe*/
 CREATE MATERIALIZED VIEW view_materializada_equipe_Qtd AS 
-SELECT equipe.nome, count(*) AS nome_equipe 
+SELECT equipe.nome, count(*) AS qnt_equipe 
 FROM equipe 
 LEFT JOIN jogador_estrangeiro ON (equipe.id = jogador_estrangeiro.id_equipe)
 LEFT JOIN jogador_brasileiro ON (equipe.id = jogador_brasileiro.id_equipe)
-GROUP BY
-	equipe.id
-SELECT * FROM view_materializada_equipe_Qtd
+GROUP BY equipe.id;
 
-/*Busca todos os jogadores*/
+SELECT * FROM view_materializada_equipe_Qtd;
+
+/*Busca todos os jogadores e seus países*/
 CREATE OR REPLACE VIEW TodosOsJogadores AS
-SELECT nome FROM jogador_estrangeiro
+SELECT nome, pais_origem FROM jogador_estrangeiro
 UNION ALL
-SELECT nome FROM jogador_brasileiro;
+SELECT nome, 'Brasil' FROM jogador_brasileiro;
 
 SELECT * FROM TodosOsJogadores;
 
@@ -284,4 +279,30 @@ WHERE nome IN (
   HAVING MAX(data_nasc) BETWEEN '2000-01-01' AND '2010-12-31'
 );
 
-SELECT * FROM view_tecnicos_anos2000_2010
+SELECT * FROM view_tecnicos_anos2000_2010;
+
+/*retorna apenas posições que jogadores brasileiros
+e estrangeiros tem em comum*/
+CREATE OR REPLACE VIEW view_jogadores_posicao AS
+SELECT posicao FROM jogador_brasileiro
+INTERSECT
+SELECT posicao FROM jogador_estrangeiro;
+ 
+SELECT * FROM view_jogadores_posicao;
+
+/*retorna equipes que não tem jogadores na posição de goleiro*/
+CREATE OR REPLACE VIEW view_equipe_jogadores_goleiro AS
+SELECT nome FROM equipe
+WHERE id NOT IN (
+	SELECT id_equipe
+	FROM jogador_brasileiro
+	WHERE posicao = 'Goleiro'
+)
+EXCEPT
+SELECT nome FROM equipe
+WHERE id IN (
+SELECT id_equipe
+FROM jogador_brasileiro
+WHERE salario > 300000);
+
+SELECT * FROM view_equipe_jogadores_goleiro;
