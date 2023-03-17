@@ -251,6 +251,35 @@ CREATE OR REPLACE VIEW Jogadores AS
 		FROM jogador_estrangeiro
 	UNION
 	SELECT nome, posicao, id_equipe, 'Brasil', salario
-		FROM jogador_brasileiro;
+		FROM jogador_brasileir o;
 		
 SELECT * FROM Jogadores;
+
+INSERT INTO listaatacantesbrasileiros (id, cpf, nome, posicao, id_equipe, salario)
+	VALUES (NEXTVAL('seq_jogador'), '987.654.345-89', 'Pato', 'Atacante', 4, 400000);
+	
+INSERT INTO listaatacantesbrasileiros (id, cpf, nome, posicao, id_equipe, salario)
+	VALUES (NEXTVAL('seq_jogador'), '123.456.786-89', 'Breno', 'Zagueiro', 4, 17000);
+	
+CREATE OR REPLACE VIEW ListaAtacantesBrasileiros AS
+	SELECT * FROM jogador_brasileiro
+		WHERE posicao like 'Atacante'
+		WITH LOCAL CHECK OPTION;
+		
+INSERT INTO listaatacantesbrasileiros (id, cpf, nome, posicao, id_equipe, salario) 
+VALUES (NEXTVAL('seq_jogador'), '321.456.786-89', 'Breno', 'Atacante', 4, 17000);
+	
+ALTER VIEW listaatacantesbrasileiros RENAME TO listaatacantesbrasileirosstop;
+DROP VIEW listaatacantesbrasileirosstop;
+	
+
+
+/*CREATE OR REPLACE VIEW MediaPorPosicao (posicao, mediaSalario) AS
+	SELECT j.posicao, AVG(j.salario) 
+		FROM jogadores*/
+		
+		
+		
+		
+		
+		
