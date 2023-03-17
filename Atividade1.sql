@@ -234,82 +234,54 @@ INSERT INTO jogo (id, data_jogo, id_equipe_casa, id_equipe_fora,
                 gols_equipe_casa, gols_equipe_fora, id_cidade, estadio, id_campeonato)
   VALUES (NEXTVAL('seq_jogo'), TO_DATE('29/07/1994', 'dd/mm/yyyy'), 6, 12, 2, 1, null, null, 1);
   
-  
-
-CREATE OR REPLACE VIEW ListaAtacantesBrasileiros AS
-	SELECT * FROM jogador_brasileiro
-		WHERE posicao like 'Atacante';
+/*view que ordena os jogos pela ordem da data*/
+CREATE OR REPLACE VIEW OrdenaDataJogos AS
+	SELECT * FROM jogo
+		ORDER BY data_jogo;
 		
-SELECT * FROM ListaAtacantesBrasileiros;
+SELECT * FROM OrdenaDataJogos;
 
-SELECT nome, cpf FROM ListaAtacantesBrasileiros
-	WHERE salario > 200000;
-	
-	
-CREATE OR REPLACE VIEW Jogadores AS
-	SELECT nome, posicao, id_equipe, pais_origem, salario
-		FROM jogador_estrangeiro
-	UNION
-	SELECT nome, posicao, id_equipe, 'Brasil', salario
-		FROM jogador_brasileiro;
-		
-SELECT * FROM Jogadores;
+/*view materializada que tras os dados do nome das equipes
+e seus jogadores*/
+CREATE MATERIALIZED VIEW view_materializada_equipe AS 
+SELECT equipe.nome AS nome_equipe, jogador_estrangeiro.nome AS nome_jogador 
+FROM equipe 
+LEFT JOIN jogador_estrangeiro ON (equipe.id = jogador_estrangeiro.id_equipe);
 
-INSERT INTO listaatacantesbrasileiros (id, cpf, nome, posicao, id_equipe, salario)
-	VALUES (NEXTVAL('seq_jogador'), '987.654.345-89', 'Pato', 'Atacante', 4, 400000);
-	
-INSERT INTO listaatacantesbrasileiros (id, cpf, nome, posicao, id_equipe, salario)
-	VALUES (NEXTVAL('seq_jogador'), '123.456.786-89', 'Breno', 'Zagueiro', 4, 17000);
-	
-CREATE OR REPLACE VIEW ListaAtacantesBrasileiros AS
-	SELECT * FROM jogador_brasileiro
-		WHERE posicao like 'Atacante'
-		WITH LOCAL CHECK OPTION;
-		
-INSERT INTO listaatacantesbrasileiros (id, cpf, nome, posicao, id_equipe, salario) 
-VALUES (NEXTVAL('seq_jogador'), '321.456.786-89', 'Breno', 'Atacante', 4, 17000);
-	
-ALTER VIEW listaatacantesbrasileiros RENAME TO listaatacantesbrasileirosstop;
-DROP VIEW listaatacantesbrasileirosstop;
-	
+SELECT * FROM view_materializada_equipe
 
+CREATE OR REPLACE VIEW view_tecnicos_anos2000_2010 AS
+SELECT *
+FROM tecnico
+WHERE tecnico.data_nasc BETWEEN '2000-01-01' AND '2010-12-31';
 
-/*CREATE OR REPLACE VIEW MediaPorPosicao (posicao, mediaSalario) AS
-	SELECT j.posicao, AVG(j.salario) 
-		FROM jogadores*/
-		
-  CREATE TABLE funcionarios
-  (
-    codigo integer NOT NULL,
-    nome_func character varying(100) NOT NULL,
-    data_entrada date,
-    profissao character varying(100) NOT NULL,
-    salario real,
-    CONSTRAINT funcionarios_pkey PRIMARY KEY (codigo)
-  )
+/*Realiza uma pesquisa para calcular quantos jogadores existem em cada equipe*/
+CREATE MATERIALIZED VIEW view_materializada_equipe_Qtd AS 
+SELECT equipe.nome, count(*) AS nome_equipe 
+FROM equipe 
+LEFT JOIN jogador_estrangeiro ON (equipe.id = jogador_estrangeiro.id_equipe)
+LEFT JOIN jogador_brasileiro ON (equipe.id = jogador_brasileiro.id_equipe)
+GROUP BY
+	equipe.id
+SELECT * FROM view_materializada_equipe_Qtd
 
+/*Busca todos os jogadores*/
+CREATE OR REPLACE VIEW TodosOsJogadores AS
+SELECT nome FROM jogador_estrangeiro
+UNION ALL
+SELECT nome FROM jogador_brasileiro;
 
-  INSERT INTO funcionarios(codigo, nome_func, data_entrada, profissao, salario) VALUES (1, 'Edson Dionisio', '2015-09-01', 'Desenvolvedor Web', 2000.00);
-  INSERT INTO funcionarios(codigo, nome_func, data_entrada, profissao, salario) VALUES (2, 'Marília Késsia', '2013-02-01', 'Coordenadora', 5000.00);
-  INSERT INTO funcionarios(codigo, nome_func, data_entrada, profissao, salario) VALUES (3, 'Caroline França', '2015-06-15', 'Estéticista', 2500.00);
+SELECT * FROM TodosOsJogadores;
 
-  CREATE MATERIALIZED VIEW view_materializada_funcionario AS SELECT * FROM funcionarios WITH NO DATA;
+/*Pega o tecnico mais velho entre '2000-01-01' e '2010-12-31'*/
+CREATE OR REPLACE VIEW view_tecnicos_anos2000_2010 AS
+SELECT nome, data_nasc
+FROM tecnico
+WHERE nome IN (
+  SELECT nome
+  FROM tecnico
+  GROUP BY nome
+  HAVING MAX(data_nasc) BETWEEN '2000-01-01' AND '2010-12-31'
+);
 
-  INSERT INTO funcionarios (codigo, nome_func, data_entrada, profissao) VALUES (5, 'Gustavo França', '2014-10-11', 'Estagiário');
-  INSERT INTO funcionarios (codigo, nome_func, data_entrada, profissao) VALUES (6, 'Mayara Silva', '2015-06-10', 'Analista de testes');
-  INSERT INTO funcionarios (codigo, nome_func, data_entrada, profissao) VALUES (7, 'João dos testes', '2011-01-01', 'Gerente de negócios');
-  INSERT INTO funcionarios (codigo, nome_func, data_entrada, profissao) VALUES (8, 'Marina França', '2012-03-07', 'Analista de negócios');
-  INSERT INTO funcionarios (codigo, nome_func, data_entrada, profissao) VALUES (9, 'Paulo Dionisio', '2013-07-07', 'DBA Sênior');  
-   
-  SELECT * FROM view_materializada_funcionario;
-
-  REFRESH MATERIALIZED VIEW view_materializada_funcionario;
-
-  SELECT * FROM view_materializada_funcionario;
-  
-  DROP MATERIALIZED VIEW view_materializada_funcionario;
-		
-		
-		
-		
-		
+SELECT * FROM view_tecnicos_anos2000_2010
