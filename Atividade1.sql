@@ -1,3 +1,11 @@
+/*
+Integrantes:
+Gabriella Marreto Rodrigues - RA: 2372533
+Italo Kaique Bertini Bueno  - RA: 2419068
+Gabriel Vinícius Raffaelly  - RA: 2419025
+Gustavo Henrique Kophal     - Ra: 2419050
+*/
+
 CREATE TABLE Equipe (
   id INTEGER CONSTRAINT pk_equipe PRIMARY KEY,
   nome VARCHAR(32)
