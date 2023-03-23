@@ -20,13 +20,11 @@ DECLARE
 	quantidade integer := 30;
 BEGIN
 	RAISE NOTICE 'Aqui a quantidade é %', quantidade;
-	RETURN quantidade;
 	quantidade := 50;
 	
 		-- inicio de sub-bloco
 		DECLARE	
 			quantidade integer := 80;
-			RETURN quantidade;
 		BEGIN
 			RAISE NOTICE 'Aqui a quantidade é %', quantidade;
 		END;
