@@ -44,7 +44,7 @@ CREATE OR REPLACE FUNCTION hi_lo (
 	b NUMERIC,
 	c NUMERIC,
 		OUT hi NUMERIC,
-	OUT lo NUMERIC)
+		OUT lo NUMERIC)
 AS $$
 BEGIN
 	hi := GREATEST(a, b, c);
