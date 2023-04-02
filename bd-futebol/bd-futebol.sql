@@ -286,7 +286,7 @@ DROP VIEW listaatacantesbrasileirosstop;
     profissao character varying(100) NOT NULL,
     salario real,
     CONSTRAINT funcionarios_pkey PRIMARY KEY (codigo)
-  )
+  );
 
 
   INSERT INTO funcionarios(codigo, nome_func, data_entrada, profissao, salario) VALUES (1, 'Edson Dionisio', '2015-09-01', 'Desenvolvedor Web', 2000.00);
@@ -301,15 +301,60 @@ DROP VIEW listaatacantesbrasileirosstop;
   INSERT INTO funcionarios (codigo, nome_func, data_entrada, profissao) VALUES (8, 'Marina França', '2012-03-07', 'Analista de negócios');
   INSERT INTO funcionarios (codigo, nome_func, data_entrada, profissao) VALUES (9, 'Paulo Dionisio', '2013-07-07', 'DBA Sênior');  
    
-  SELECT * FROM view_materializada_funcionario;
+  -- SELECT * FROM view_materializada_funcionario;
 
   REFRESH MATERIALIZED VIEW view_materializada_funcionario;
 
   SELECT * FROM view_materializada_funcionario;
   
   DROP MATERIALIZED VIEW view_materializada_funcionario;
+  
+  ----------------------------
+  
+  EXPLAIN ANALYSE SELECT nome, cpf FROM ListaAtacantesBrasileiros
+	WHERE salario > 200000;
 		
+  CREATE INDEX ON jogador_brasileiro(salario);
+  
+  CREATE OR REPLACE FUNCTION mediaIndex()
+  RETURNS NUMERIC AS $$
+  	BEGIN
 		
+	END;
+  $$ LANGUAGE 'plpgsql';
+  
+  
+  
+CREATE TEMPORARY TABLE temp_resultados (exec_time numeric);
+  
+INSERT INTO temp_resultados
+SELECT (EXPLAIN ANALYZE SELECT * FROM minha_tabela).total_time
+FROM generate_series(1, 10);
+
+CREATE OR REPLACE FUNCTION media_execution_time() RETURNS numeric AS $$
+DECLARE
+    total numeric;
+BEGIN
+    SELECT AVG(exec_time) INTO total FROM temp_resultados;
+    RETURN total;
+END;
+$$ LANGUAGE plpgsql;
+  
+  CREATE OR REPLACE FUNCTION media_execution_time(sql_command text) RETURNS numeric AS $$
+DECLARE
+    total numeric;
+BEGIN
+    CREATE TEMPORARY TABLE temp_resultados (exec_time numeric);
+    FOR i IN 1..10 LOOP
+        INSERT INTO temp_resultados SELECT (EXPLAIN ANALYZE EXECUTE sql_command).total_time;
+    END LOOP;
+    SELECT AVG(exec_time) INTO total FROM temp_resultados;
+    DROP TABLE temp_resultados;
+    RETURN total;
+END;
+$$ LANGUAGE plpgsql;
+
+  
 		
 		
 		
