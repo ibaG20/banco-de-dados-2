@@ -241,13 +241,7 @@ INSERT INTO jogo (id, data_jogo, id_equipe_casa, id_equipe_fora,
 INSERT INTO jogo (id, data_jogo, id_equipe_casa, id_equipe_fora, 
                 gols_equipe_casa, gols_equipe_fora, id_cidade, estadio, id_campeonato)
   VALUES (NEXTVAL('seq_jogo'), TO_DATE('29/07/1994', 'dd/mm/yyyy'), 6, 12, 2, 1, null, null, 1);
-  
-/*view que ordena os jogos pela ordem da data*/
-CREATE OR REPLACE VIEW OrdenaDataJogos AS
-	SELECT * FROM jogo
-		ORDER BY data_jogo;
-		
-SELECT * FROM OrdenaDataJogos;
+
 
 --Calcula a média de 10 execuções do SELECT passado de parametro e retorna o tempo de planning e o de execution
 CREATE OR REPLACE FUNCTION media_execution_planning(sqlCodeText TEXT, QtdExecuções INTEGER) RETURNS TABLE(planning_time_avg NUMERIC, execution_time_avg NUMERIC)
