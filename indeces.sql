@@ -272,3 +272,32 @@ SELECT * FROM media_execution_planning('SELECT * from jogador_brasileiro WHERE p
 --Media de tempo de execução/planejamento com Hash
 CREATE INDEX ON jogador_brasileiro USING hash (posicao);
 SELECT * FROM media_execution_planning('SELECT * from jogador_brasileiro WHERE posicao = ''Atacante''', 10);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+CREATE TABLE foo(id int, name text);
+INSERT INTO foo VALUES (1, 'Alex');
+INSERT INTO foo VALUES (2, 'Bob');
+SELECT ctid, * FROM foo;
+
+
+CREATE TABLE bar(id int, name text);
+INSERT INTO bar(id, name) VALUES (5432, 'Maestro');
+
+EXPLAIN SELECT name FROM bar;
+EXPLAIN SELECT name FROM bar WHERE id = 5432;
+
