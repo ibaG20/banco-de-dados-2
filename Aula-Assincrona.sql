@@ -1,4 +1,4 @@
--- QUESTÃO 21 -----------------------
+-- QUESTÃO 21 -------------------------------------------
 
 CREATE TABLE Peça (
   CodPeça INT NOT NULL,
@@ -133,23 +133,6 @@ JOIN Embarque E ON P.CodPeça = E.CodPeça
 WHERE E.QuantidadeEmbarque > 100;
 $$;
 CALL Consulta_Pecas_Emb_Quantidade();
-   
-/*DROP FUNCTION Consulta_Pecas_Emb_Quantidade();
-CREATE OR REPLACE FUNCTION Consulta_Pecas_Emb_Quantidade()
-RETURNS TABLE (
-    CodPeca integer,
-    NomePeca text,
-    QuantidadeEmbarque integer
-)
-AS $$
-BEGIN
-    RETURN QUERY SELECT P.CodPeça, P.NomePeça, E.QuantidadeEmbarque
-    FROM Peça P JOIN Embarque E ON P.CodPeça = E.CodPeça AND 
-    E.QuantidadeEmbarque > 100;
-END;
-$$ LANGUAGE plpgsql;*/
-
-SELECT * FROM Consulta_Pecas_Emb_Quantidade();
 
     -- index:
 	DISCARD ALL
@@ -163,22 +146,8 @@ CREATE INDEX IDX_Embarque ON Embarque(CodPeça, QuantidadeEmbarque);
   --depois de criar o index:
 --Execution Time: 0.020 ms
 --Planning Time: 0.067 ms
-   
-CREATE OR REPLACE PROCEDURE Consulta_Peças_Emb_Quantidade()
-LANGUAGE SQL
-AS $$
-    SELECT P.CodPeça, P.NomePeça, E.QuantidadeEmbarque
-    FROM Peça P JOIN Embarque E ON P.CodPeça = E.CodPeça AND 
-    E.QuantidadeEmbarque > 100;
-$$;
 
-CREATE TEMPORARY TABLE tmp_resultados AS
-EXECUTE Consulta_Peças_Emb_Quantidade();
-
-
-
-
--- QUESTÃO 21 -----------------------
+-- QUESTÃO 17 -------------------------------------------
 
 CREATE TABLE CATEGORIA_CLIENTE (
     COD_CATEGORIA_CLIENTE INTEGER PRIMARY KEY,
@@ -221,7 +190,7 @@ CREATE TABLE CONTA (
 CREATE TABLE TIPO_MOVIMENTACAO (
     COD_TIPO_MOVIMENTACAO INTEGER PRIMARY KEY,
     DES_TIPO_MOVIMENTACAO VARCHAR(200),
-    VAL_TAXA MONEY,
+    VAL_TAXA NUMERIC,
     IND_DEBITO_CREDITO CHAR(1)
 );
 
@@ -229,7 +198,7 @@ CREATE TABLE HISTORICO_MOVIMENTACAO (
     COD_HISTORICO_MOVIMENTACAO INTEGER PRIMARY KEY,
     NUM_CONTA INTEGER,
     COD_TIPO_MOVIMENTACAO INTEGER,
-    VAL_MOVIMENTACAO MONEY,
+    VAL_MOVIMENTACAO NUMERIC,
     DTA_MOVIMENTACAO DATE,
     FOREIGN KEY (NUM_CONTA) REFERENCES CONTA(NUM_CONTA),
     FOREIGN KEY (COD_TIPO_MOVIMENTACAO) REFERENCES TIPO_MOVIMENTACAO(COD_TIPO_MOVIMENTACAO)
@@ -427,7 +396,245 @@ VALUES (1, 1, 1, 1000.00, '2023-04-01 10:30:00'),
        (23, 23, 3, 23000.00, '2023-04-23 18:30:00'),
        (24, 24, 4, 24000.00, '2023-04-23 19:45:00');
 
+--resposta:
+SELECT CL.NOM_CLIENTE, AVG(HM.VAL_MOVIMENTACAO)
+FROM CLIENTE CL INNER JOIN CONTA CO ON CL.COD_CLIENTE = CO.COD_CLIENTE 
+INNER JOIN HISTORICO_MOVIMENTACAO HM ON CO.NUM_CONTA = HM.NUM_CONTA 
+GROUP BY CL.COD_CLIENTE, CL.NOM_CLIENTE 
+ORDER BY AVG(HM.VAL_MOVIMENTACAO) DESC;
 		
+	--view:retorna a média de movimentação financeira de cada cliente, agrupados pelo nome e código do cliente
+CREATE VIEW view_media_movimentacao AS
+SELECT CL.NOM_CLIENTE, AVG(HM.VAL_MOVIMENTACAO) AS MEDIA_MOVIMENTACAO
+FROM CLIENTE CL INNER JOIN CONTA CO ON CL.COD_CLIENTE = CO.COD_CLIENTE 
+INNER JOIN HISTORICO_MOVIMENTACAO HM ON CO.NUM_CONTA = HM.NUM_CONTA 
+GROUP BY CL.COD_CLIENTE, CL.NOM_CLIENTE;
+
+SELECT * FROM view_media_movimentacao
+
+	--procedure:
+CREATE OR REPLACE PROCEDURE sp_media_movimentacao(p_nome_cliente VARCHAR(50))
+AS 
+$$
+DECLARE
+  v_media_movimentacao NUMERIC;
+BEGIN
+  SELECT AVG(HM.VAL_MOVIMENTACAO)
+  INTO v_media_movimentacao
+  FROM CLIENTE CL 
+  INNER JOIN CONTA CO ON CL.COD_CLIENTE = CO.COD_CLIENTE 
+  INNER JOIN HISTORICO_MOVIMENTACAO HM ON CO.NUM_CONTA = HM.NUM_CONTA 
+  WHERE CL.NOM_CLIENTE = p_nome_cliente;
+  
+  IF v_media_movimentacao IS NULL THEN
+    RAISE EXCEPTION 'Cliente não encontrado';
+  ELSE
+    RAISE NOTICE 'Média de movimentação financeira do cliente % é: %', p_nome_cliente, v_media_movimentacao;
+  END IF;
+END;
+$$
+LANGUAGE plpgsql;
+
+CALL sp_media_movimentacao('Gabriella Marreto');
+
+    -- index:
+	DISCARD ALL
+EXPLAIN ANALYSE SELECT CL.NOM_CLIENTE, AVG(HM.VAL_MOVIMENTACAO)
+FROM CLIENTE CL INNER JOIN CONTA CO ON CL.COD_CLIENTE = CO.COD_CLIENTE 
+INNER JOIN HISTORICO_MOVIMENTACAO HM ON CO.NUM_CONTA = HM.NUM_CONTA 
+GROUP BY CL.COD_CLIENTE, CL.NOM_CLIENTE 
+ORDER BY AVG(HM.VAL_MOVIMENTACAO) DESC;
+  --antes de criar o index:
+--Execution Time: 0.299 ms
+--Planning Time: 4.949 ms
+
+CREATE INDEX IDX_Embarque ON Embarque(CodPeça, QuantidadeEmbarque);
+  --depois de criar o index:
+--Execution Time: 0.140 ms
+--Planning Time: 0.182 ms
+
+
+-- QUESTÃO 23 -------------------------------------------
+
+CREATE TABLE Motorista (
+  idMoto INT PRIMARY KEY,
+  nome VARCHAR(50),
+  telefone VARCHAR(20),
+  idade INT
+); 
+
+CREATE TABLE Carro (
+  idCarro INT PRIMARY KEY,
+  nomeCarro VARCHAR(50),
+  cor VARCHAR(20)
+);
+
+CREATE TABLE Reservas (
+  idMoto INT,
+  idCarro INT,
+  dia DATE,
+  FOREIGN KEY (idMoto) REFERENCES Motorista(idMoto),
+  FOREIGN KEY (idCarro) REFERENCES Carro(idCarro)
+);
+
+SELECT * FROM Motorista;
+SELECT * FROM Carro;
+SELECT * FROM Reservas;
+
+
+INSERT INTO Motorista (idMoto, nome, telefone, idade) VALUES
+  (1, 'Pedro', '(11) 1111-1111', 28),
+  (2, 'Ana', '(11) 2222-2222', 34),
+  (3, 'Lucas', '(11) 3333-3333', 22),
+  (4, 'Paulo', '(11) 4444-4444', 27),
+  (5, 'Gabriela', '(11) 5555-5555', 31),
+  (6, 'Felipe', '(11) 6666-6666', 29),
+  (7, 'Mariana', '(11) 7777-7777', 25),
+  (8, 'Fernanda', '(11) 8888-8888', 30),
+  (9, 'Rafael', '(11) 9999-9999', 33),
+  (10, 'Bruna', '(11) 1010-1010', 26),
+  (11, 'Gustavo', '(11) 1111-2222', 28),
+  (12, 'Carla', '(11) 2222-3333', 34),
+  (13, 'Diego', '(11) 3333-4444', 22),
+  (14, 'Camila', '(11) 4444-5555', 27),
+  (15, 'Leticia', '(11) 5555-6666', 31),
+  (16, 'Thiago', '(11) 6666-7777', 29),
+  (17, 'Isabela', '(11) 7777-8888', 25),
+  (18, 'Marcos', '(11) 8888-9999', 30),
+  (19, 'Renata', '(11) 9999-1010', 33),
+  (20, 'Luciana', '(11) 1010-1111', 26),
+  (21, 'Vinicius', '(11) 1111-3333', 28),
+  (22, 'Aline', '(11) 2222-4444', 34),
+  (23, 'Eduardo', '(11) 3333-5555', 22),
+  (24, 'Patricia', '(11) 4444-6666', 27);
+  
+ INSERT INTO Carro (idCarro, nomeCarro, cor) VALUES
+  (1, 'Fiesta', 'Vermelho'),
+  (2, 'Civic', 'Preto'),
+  (3, 'Fox', 'Prata'),
+  (4, 'Golf', 'Branco'),
+  (5, 'Siena', 'Azul'),
+  (6, 'Cruze', 'Cinza'),
+  (7, 'Onix', 'Branco'),
+  (8, 'HB20', 'Vermelho'),
+  (9, 'Palio', 'Verde'),
+  (10, 'EcoSport', 'Preto'),
+  (11, 'Tracker', 'Azul'),
+  (12, 'Uno', 'Branco'),
+  (13, 'Punto', 'Cinza'),
+  (14, 'Sandero', 'Preto'),
+  (15, 'Logan', 'Vermelho'),
+  (16, 'Tucson', 'Branco'),
+  (17, 'Corolla', 'Preto'),
+  (18, 'Jetta', 'Cinza'),
+  (19, 'Sentra', 'Azul'),
+  (20, 'Fusion', 'Prata'),
+  (21, 'Etios', 'Branco'),
+  (22, 'Renegade', 'Vermelho'),
+  (23, 'Creta', 'Azul'),
+  (24, 'HR-V', 'Preto');
+   
+ INSERT INTO Reservas (idMoto, idCarro, dia) VALUES
+  (1, 3, '2023-04-12'),
+  (2, 5, '2023-04-10'),
+  (3, 1, '2023-04-13'),
+  (4, 2, '2023-04-14'),
+  (5, 4, '2023-04-16'),
+  (6, 6, '2023-04-12'),
+  (7, 8, '2023-04-18'),
+  (8, 10, '2023-04-20'),
+  (9, 12, '2023-04-22'),
+  (10, 14, '2023-04-24'),
+  (11, 16, '2023-04-26'),
+  (12, 18, '2023-04-28'),
+  (13, 20, '2023-04-30'),
+  (14, 22, '2023-05-02'),
+  (15, 24, '2023-05-04'),
+  (16, 1, '2023-05-06'),
+  (17, 3, '2023-05-08'),
+  (18, 5, '2023-05-10'),
+  (19, 7, '2023-05-12'),
+  (20, 9, '2023-05-14'),
+  (21, 11, '2023-05-16'),
+  (22, 13, '2023-05-18'),
+  (23, 15, '2023-05-20'),
+  (24, 17, '2023-05-22');
+  
+  --resposta:
+SELECT M.NOME
+FROM MOTORISTA M
+WHERE M.IDMOTO IN
+ (SELECT R.IDMOTO
+ FROM RESERVAS R
+ WHERE R.IDCARRO IN
+ (SELECT C.IDCARRO
+ FROM CARRO C
+ WHERE C.COR = 'Vermelho'));
+ 
+ 	--view: retorna os motoristas com carro vermelho
+CREATE VIEW motorista_vermelho AS
+SELECT M.NOME
+FROM MOTORISTA M
+WHERE M.IDMOTO IN
+ (SELECT R.IDMOTO
+ FROM RESERVAS R
+ WHERE R.IDCARRO IN
+ (SELECT C.IDCARRO
+ FROM CARRO C
+ WHERE C.COR = 'Vermelho'));
+ 
+ SELECT * FROM motorista_vermelho;
+
+	--procedimento:
+CREATE OR REPLACE PROCEDURE obter_motoristas_vermelhos()
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  motoristas_vermelhos CURSOR FOR
+    SELECT M.NOME
+    FROM MOTORISTA M
+    WHERE M.IDMOTO IN
+      (SELECT R.IDMOTO
+       FROM RESERVAS R
+       WHERE R.IDCARRO IN
+         (SELECT C.IDCARRO
+          FROM CARRO C
+          WHERE C.COR = 'Vermelho'));
+  motorista RECORD;
+BEGIN
+  OPEN motoristas_vermelhos;
+  LOOP
+    FETCH motoristas_vermelhos INTO motorista;
+    EXIT WHEN NOT FOUND;
+    RAISE NOTICE 'Motorista vermelho: %', motorista.nome;
+  END LOOP;
+  CLOSE motoristas_vermelhos;
+END;
+$$;
+CALL obter_motoristas_vermelhos();
+
+    -- index:
+	DISCARD ALL
+EXPLAIN ANALYSE SELECT M.NOME
+FROM MOTORISTA M
+WHERE M.IDMOTO IN
+ (SELECT R.IDMOTO
+ FROM RESERVAS R
+ WHERE R.IDCARRO IN
+ (SELECT C.IDCARRO
+ FROM CARRO C
+ WHERE C.COR = 'Vermelho'));
+  --antes de criar o index:
+--Execution Time: 0.064 ms
+--Planning Time: 3.410 ms
+
+CREATE INDEX motorista_vermelho_idx ON motorista (NOME);
+  --depois de criar o index:
+--Execution Time: 0.60 ms
+--Planning Time: 0.144 ms
+
+
+
 
 
 
